@@ -413,6 +413,9 @@ route_cmp(const void *k1, const void *k2, void *ptr)
 	if (r1->metric != r2->metric)
 		return r1->metric - r2->metric;
 
+	if (r1->mtu != r2->mtu)
+		return r1->mtu - r2->mtu;
+
 	if (r1->flags != r2->flags)
 		return r2->flags - r1->flags;
 
@@ -461,6 +464,10 @@ interface_handle_subnet_route(struct interface *iface, struct device_addr *addr,
 		if ((route.flags & DEVADDR_FAMILY) == DEVADDR_INET4) {
 			route.sourcemask = 32;
 			memcpy(&route.source, &addr->addr, sizeof(route.addr));
+		}
+		if (iface->mtu != 0) {
+			route.mtu = iface->mtu;
+			route.flags |= DEVROUTE_MTU;
 		}
 		system_add_route(dev, &route);
 	} else {
@@ -566,7 +573,7 @@ interface_update_proto_addr(struct vlist_tree *tree,
 				}
 			}
 
-			if (iface->metric)
+			if (iface->metric || (iface->mtu > 0))
 				interface_handle_subnet_route(iface, a_new, true);
 		}
 	}
