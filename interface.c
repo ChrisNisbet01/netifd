@@ -688,8 +688,10 @@ interface_proto_cb(struct interface_proto_state *state, enum interface_proto_eve
 		netifd_ubus_actiond_trigger_event();
 		break;
 	case IFPEV_DOWN:
-		if (iface->state == IFS_DOWN)
+		if (iface->state == IFS_DOWN) {
+			netifd_ubus_actiond_trigger_event();
 			return;
+		}
 
 		netifd_log_message(L_NOTICE, "Interface '%s' is now down\n", iface->name);
 		mark_interface_down(iface);
