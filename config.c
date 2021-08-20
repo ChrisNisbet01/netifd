@@ -72,6 +72,26 @@ config_parse_bridge_interface(struct uci_section *s)
 	return 0;
 }
 
+static int
+config_parse_bond_interface(struct uci_section *s)
+{
+	char *name;
+
+	name = alloca(strlen(s->e.name) + 4);
+	sprintf(name, "bo-%s", s->e.name);
+	blobmsg_add_string(&b, "name", name);
+
+	uci_to_blob(&b, s, bond_device_type.config_params);
+	if (!device_create(name, &bond_device_type, b.head)) {
+		D(INTERFACE, "Failed to create bond for interface '%s'\n", s->e.name);
+		return -EINVAL;
+	}
+
+	blob_buf_init(&b, 0);
+	blobmsg_add_string(&b, "ifname", name);
+	return 0;
+}
+
 static void
 config_parse_interface(struct uci_section *s, bool alias)
 {
@@ -90,6 +110,11 @@ config_parse_interface(struct uci_section *s, bool alias)
 		type = uci_lookup_option_string(uci_ctx, s, "type");
 	if (type && !strcmp(type, "bridge")) {
 		if (config_parse_bridge_interface(s))
+			return;
+
+		bridge = true;
+	} else if (type && !strcmp(type, "bond")) {
+		if (config_parse_bond_interface(s))
 			return;
 
 		bridge = true;
@@ -180,6 +205,8 @@ config_init_devices(void)
 				devtype = &macvlan_device_type;
 			else if (!strcmp(type, "tunnel"))
 				devtype = &tunnel_device_type;
+			else if (!strcmp(type, "bond"))
+				devtype = &bond_device_type;
 		}
 
 		if (devtype)
