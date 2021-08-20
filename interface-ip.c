@@ -458,6 +458,10 @@ interface_handle_subnet_route(struct interface *iface, struct device_addr *addr,
 
 		route.flags &= ~DEVADDR_KERNEL;
 		route.metric = iface->metric;
+		if ((route.flags & DEVADDR_FAMILY) == DEVADDR_INET4) {
+			route.sourcemask = 32;
+			memcpy(&route.source, &addr->addr, sizeof(route.addr));
+		}
 		system_add_route(dev, &route);
 	} else {
 		system_del_route(dev, &route);
