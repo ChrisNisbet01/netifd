@@ -237,7 +237,7 @@ mark_interface_down(struct interface *iface)
 		return;
 
 	iface->state = IFS_DOWN;
-	if (state == IFS_UP)
+	if (state == IFS_UP || state == IFS_SETUP)
 		interface_event(iface, IFEV_DOWN);
 	interface_ip_set_enabled(&iface->config_ip, false);
 	interface_ip_flush(&iface->proto_ip);
